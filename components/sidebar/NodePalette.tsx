@@ -67,13 +67,7 @@ export function NodePalette() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="px-4 py-3">
-        <h2 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-          Node Palette
-        </h2>
-        <p className="text-[10px] text-muted-foreground mt-0.5">
-          Drag nodes onto the canvas
-        </p>
-        <div className="mt-3 relative">
+        <div className="relative">
           <HugeiconsIcon icon={Search01Icon} className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
           <Input 
             value={search}

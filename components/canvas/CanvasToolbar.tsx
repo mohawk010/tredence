@@ -4,35 +4,20 @@ import React, { useState, useEffect } from "react";
 import { useWorkflowStore } from "@/hooks/useWorkflowStore";
 import { serializeWorkflow } from "@/lib/serialization";
 import { useWorkflows } from "@/hooks/useWorkflows";
+import { useSimulate } from "@/hooks/useSimulate";
+import { NodeType } from "@/lib/types";
 import { WorkflowLibraryDialog } from "@/components/forms/WorkflowLibraryDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  UndoIcon,
-  RedoIcon,
-  CloudUploadIcon,
-  CloudDownloadIcon,
-  PlayIcon,
-  Delete02Icon,
-  Sun01Icon,
-  Moon02Icon,
-  AiBrain01Icon,
-} from "@hugeicons/core-free-icons";
+import { UndoIcon, RedoIcon, CloudUploadIcon, CloudDownloadIcon, PlayIcon, Delete02Icon, Sun01Icon, Moon02Icon, AiBrain01Icon } from "@hugeicons/core-free-icons";
 import { useTheme } from "next-themes";
+import { ExecutionDataDrawer } from "@/components/canvas/ExecutionDataDrawer";
 
-interface CanvasToolbarProps {
-  onOpenSandbox: () => void;
-}
-
-export function CanvasToolbar({ onOpenSandbox }: CanvasToolbarProps) {
+export function CanvasToolbar() {
   const workflowName = useWorkflowStore((s) => s.workflowName);
   const workflowId = useWorkflowStore((s) => s.workflowId);
   const setWorkflowName = useWorkflowStore((s) => s.setWorkflowName);
@@ -52,10 +37,131 @@ export function CanvasToolbar({ onOpenSandbox }: CanvasToolbarProps) {
   const { saveWorkflow } = useWorkflows();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  
+  const { simulate, isSimulating } = useSimulate();
+  const updateNodeData = useWorkflowStore((s) => s.updateNodeData);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionDrawer, setExecutionDrawer] = useState<{
+    open: boolean;
+    csvContent?: string;
+    csvFileName?: string;
+    executionResults?: import("@/components/canvas/ExecutionDataDrawer").CandidateResult[];
+    isExecuting?: boolean;
+    executingIndex?: number;
+  }>({ open: false });
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleRunSimulation = async () => {
+    // Clear all node statuses
+    nodes.forEach((n) => updateNodeData(n.id, { executionStatus: undefined, executionMessage: undefined }));
+
+    const csvNode = nodes.find((n) => n.type === NodeType.CSV_TRIGGER);
+    const csvData = csvNode?.data as { fileContent?: string; fileName?: string } | undefined;
+
+    // ── REAL EXECUTION (CSV data present) ─────────────────────────
+    if (csvData?.fileContent) {
+      setIsExecuting(true);
+      setExecutionDrawer({
+        open: true,
+        csvContent: csvData.fileContent,
+        csvFileName: csvData.fileName,
+        isExecuting: true,
+        executingIndex: 0,
+      });
+
+      const results: import("@/components/canvas/ExecutionDataDrawer").CandidateResult[] = [];
+
+      try {
+        const res = await fetch("/api/execute", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nodes, csvContent: csvData.fileContent }),
+        });
+
+        if (!res.ok || !res.body) throw new Error("Execute API failed");
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const event = JSON.parse(line);
+
+              if (event.type === "node_status") {
+                updateNodeData(event.nodeId, {
+                  executionStatus: event.status,
+                  executionMessage: event.message,
+                });
+              }
+
+              if (event.type === "candidate_start") {
+                setExecutionDrawer((prev) => ({ ...prev, executingIndex: event.index }));
+              }
+
+              if (event.type === "candidate_done") {
+                results.push(event as import("@/components/canvas/ExecutionDataDrawer").CandidateResult);
+                setExecutionDrawer((prev) => ({
+                  ...prev,
+                  executionResults: [...results],
+                }));
+              }
+
+              if (event.type === "candidate_error") {
+                results.push({ name: event.name, email: "", fitScore: 0, recommendation: "REVIEW", error: true });
+              }
+            } catch {
+              // skip malformed line
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Execution failed:", err);
+        const startNode = nodes.find((n) => n.type === NodeType.START);
+        if (startNode) updateNodeData(startNode.id, { executionStatus: "failed", executionMessage: "Execution failed" });
+      } finally {
+        setIsExecuting(false);
+        setExecutionDrawer((prev) => ({ ...prev, isExecuting: false, executionResults: results }));
+      }
+      return;
+    }
+
+    // ── SIMULATION FALLBACK (no CSV) ──────────────────────────────
+    const startNode = nodes.find((n) => n.type === NodeType.START);
+    if (startNode) updateNodeData(startNode.id, { executionStatus: "running" });
+
+    const result = await simulate(nodes, edges);
+
+    if (!result) {
+      if (startNode) updateNodeData(startNode.id, { executionStatus: "failed", executionMessage: "Could not reach simulation server." });
+      return;
+    }
+    if (!result.success && result.steps.length === 0) {
+      const msg = result.errors?.[0] || "Workflow validation failed.";
+      if (startNode) updateNodeData(startNode.id, { executionStatus: "failed", executionMessage: msg });
+      return;
+    }
+    if (startNode) updateNodeData(startNode.id, { executionStatus: undefined });
+
+    for (const step of result.steps) {
+      updateNodeData(step.nodeId, { executionStatus: "running" });
+      await new Promise((r) => setTimeout(r, 700));
+      const status = step.status === "success" ? "success" : step.status === "skipped" ? "skipped" : "failed";
+      updateNodeData(step.nodeId, { executionStatus: status, executionMessage: step.message });
+      if (step.status === "error") break;
+    }
+  };
 
   const handleSaveToCloud = async () => {
     try {
@@ -231,13 +337,33 @@ export function CanvasToolbar({ onOpenSandbox }: CanvasToolbarProps) {
 
       {/* Right: Simulate */}
       <div className="flex items-center gap-2">
-        <Button variant="default" size="default" onClick={onOpenSandbox}>
-          <HugeiconsIcon icon={PlayIcon} strokeWidth={2} className="size-3.5" />
-          Test Workflow
+        <Button
+          variant="default"
+          size="default"
+          onClick={handleRunSimulation}
+          disabled={isSimulating || isExecuting}
+        >
+          {(isSimulating || isExecuting) ? (
+            <Spinner className="size-3.5 mr-2 text-white" />
+          ) : (
+            <HugeiconsIcon icon={PlayIcon} strokeWidth={2} className="size-3.5 mr-2" />
+          )}
+          {isExecuting ? "Running..." : isSimulating ? "Testing..." : "Test Workflow"}
         </Button>
       </div>
 
       <WorkflowLibraryDialog open={isLibraryOpen} onOpenChange={setIsLibraryOpen} />
+
+      {/* Execution Data Drawer — fixed at bottom of viewport, over the canvas */}
+      <ExecutionDataDrawer
+        open={executionDrawer.open}
+        onClose={() => setExecutionDrawer({ open: false })}
+        csvContent={executionDrawer.csvContent}
+        csvFileName={executionDrawer.csvFileName}
+        executionResults={executionDrawer.executionResults}
+        isExecuting={executionDrawer.isExecuting}
+        executingIndex={executionDrawer.executingIndex}
+      />
     </div>
   );
 }

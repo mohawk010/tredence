@@ -1,20 +1,10 @@
 "use client";
 
 import React, { useCallback } from "react";
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  MiniMap,
-  BackgroundVariant,
-  type NodeTypes,
-  type EdgeTypes,
-} from "@xyflow/react";
+import { ReactFlow, Background, Controls, MiniMap, BackgroundVariant, type NodeTypes, type EdgeTypes } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-
 import { useWorkflowStore } from "@/hooks/useWorkflowStore";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
-
 import { StartNode } from "@/components/nodes/StartNode";
 import { TaskNode } from "@/components/nodes/TaskNode";
 import { ApprovalNode } from "@/components/nodes/ApprovalNode";
@@ -100,10 +90,10 @@ export function WorkflowCanvas() {
           color="var(--border)"
         />
         <Controls
-          className="!rounded-lg !border !border-border !bg-card !shadow-md [&>button]:!border-border [&>button]:!bg-card [&>button]:!text-foreground [&>button:hover]:!bg-muted"
+          className="rounded-lg! border! border-border! bg-card! shadow-md! [&>button]:border-border! [&>button]:bg-card! [&>button]:text-foreground! [&>button:hover]:bg-muted!"
         />
         <MiniMap
-          className="!rounded-lg !border !border-border !bg-card !shadow-md"
+          className="rounded-lg! border! border-border! bg-card! shadow-md!"
           nodeStrokeWidth={3}
           zoomable
           pannable

@@ -1,6 +1,6 @@
 import type { Node, Edge } from "@xyflow/react";
 
-// ─── Node Type Enum ──────────────────────────────────────────────
+// Node Type Enum 
 export enum NodeType {
   START = "start",
   TASK = "task",
@@ -15,20 +15,25 @@ export enum NodeType {
   EMAIL = "email",
 }
 
-// ─── Node Data Types ─────────────────────────────────────────────
-export interface StartNodeData extends Record<string, unknown> {
+// Node Data Types
+export interface SharedNodeData extends Record<string, unknown> {
+  executionStatus?: "pending" | "running" | "success" | "failed" | "skipped";
+  executionMessage?: string;
+}
+
+export interface StartNodeData extends SharedNodeData {
   title: string;
   metadata: Record<string, string>;
 }
 
-export interface ConditionNodeData extends Record<string, unknown> {
+export interface ConditionNodeData extends SharedNodeData {
   title: string;
   conditionVariable: string;
   conditionOperator: "==" | "!=" | ">" | "<" | ">=" | "<=" | "contains";
   conditionValue: string;
 }
 
-export interface TaskNodeData extends Record<string, unknown> {
+export interface TaskNodeData extends SharedNodeData {
   title: string;
   description: string;
   assignee: string;
@@ -36,54 +41,56 @@ export interface TaskNodeData extends Record<string, unknown> {
   customFields: Record<string, string>;
 }
 
-export interface ApprovalNodeData extends Record<string, unknown> {
+export interface ApprovalNodeData extends SharedNodeData {
   title: string;
   approverRole: string;
   autoApproveThreshold: number;
 }
 
-export interface AutomatedStepNodeData extends Record<string, unknown> {
+export interface AutomatedStepNodeData extends SharedNodeData {
   title: string;
   actionId: string;
   actionParams: Record<string, string>;
 }
 
-export interface EndNodeData extends Record<string, unknown> {
+export interface EndNodeData extends SharedNodeData {
   message: string;
   summaryFlag: boolean;
 }
 
-export interface CSVTriggerNodeData extends Record<string, unknown> {
+export interface CSVTriggerNodeData extends SharedNodeData {
   title: string;
   fileUrl: string;
+  fileName?: string;
+  fileContent?: string;
 }
 
-export interface WebScrapeNodeData extends Record<string, unknown> {
+export interface WebScrapeNodeData extends SharedNodeData {
   title: string;
   url: string;
   selector: string;
 }
 
-export interface PDFParseNodeData extends Record<string, unknown> {
+export interface PDFParseNodeData extends SharedNodeData {
   title: string;
   fileUrlVariable: string;
 }
 
-export interface GeminiEvalNodeData extends Record<string, unknown> {
+export interface GeminiEvalNodeData extends SharedNodeData {
   title: string;
   roleIdVariable: string;
   resumeTextVariable: string;
   customPrompt: string;
 }
 
-export interface EmailNodeData extends Record<string, unknown> {
+export interface EmailNodeData extends SharedNodeData {
   title: string;
   to: string;
   subject: string;
   body: string;
 }
 
-// ─── Union Type ──────────────────────────────────────────────────
+// Union Type
 export type WorkflowNodeData =
   | StartNodeData
   | TaskNodeData
@@ -97,7 +104,7 @@ export type WorkflowNodeData =
   | GeminiEvalNodeData
   | EmailNodeData;
 
-// ─── Typed React Flow Nodes ──────────────────────────────────────
+// Typed React Flow Nodes
 export type StartNode = Node<StartNodeData, typeof NodeType.START>;
 export type TaskNode = Node<TaskNodeData, typeof NodeType.TASK>;
 export type ApprovalNode = Node<ApprovalNodeData, typeof NodeType.APPROVAL>;
@@ -124,14 +131,14 @@ export type WorkflowNode =
   | EmailNode;
 export type WorkflowEdge = Edge;
 
-// ─── Automation Action (from mock API) ───────────────────────────
+// Automation Action (from mock API)
 export interface AutomationAction {
   id: string;
   label: string;
   params: string[];
 }
 
-// ─── Simulation ──────────────────────────────────────────────────
+// Simulation
 export type SimulationStepStatus = "pending" | "running" | "success" | "error" | "skipped";
 
 export interface SimulationStep {
@@ -149,7 +156,7 @@ export interface SimulationResult {
   errors: string[];
 }
 
-// ─── Validation ──────────────────────────────────────────────────
+// Validation
 export type ValidationSeverity = "error" | "warning";
 
 export interface ValidationError {
@@ -159,7 +166,7 @@ export interface ValidationError {
   severity: ValidationSeverity;
 }
 
-// ─── Serialized Workflow ─────────────────────────────────────────
+// Serialized Workflow
 export interface SerializedWorkflow {
   name: string;
   nodes: WorkflowNode[];

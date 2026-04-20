@@ -222,7 +222,6 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     get().pushHistory();
     const startId = `node-${uuidv4()}`;
     const csvId = `node-${uuidv4()}`;
-    const scrapeId = `node-${uuidv4()}`;
     const pdfId = `node-${uuidv4()}`;
     const geminiId = `node-${uuidv4()}`;
     const emailId = `node-${uuidv4()}`;
@@ -231,11 +230,10 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
     const tNodes: WorkflowNode[] = [
       { id: startId, type: NodeType.START, position: { x: 250, y: 50 }, data: createDefaultNodeData(NodeType.START) },
       { id: csvId, type: NodeType.CSV_TRIGGER, position: { x: 250, y: 150 }, data: createDefaultNodeData(NodeType.CSV_TRIGGER) },
-      { id: scrapeId, type: NodeType.WEB_SCRAPE, position: { x: 250, y: 250 }, data: createDefaultNodeData(NodeType.WEB_SCRAPE) },
-      { id: pdfId, type: NodeType.PDF_PARSE, position: { x: 250, y: 350 }, data: createDefaultNodeData(NodeType.PDF_PARSE) },
-      { id: geminiId, type: NodeType.GEMINI_EVAL, position: { x: 250, y: 450 }, data: createDefaultNodeData(NodeType.GEMINI_EVAL) },
-      { id: emailId, type: NodeType.EMAIL, position: { x: 250, y: 550 }, data: createDefaultNodeData(NodeType.EMAIL) },
-      { id: endId, type: NodeType.END, position: { x: 250, y: 650 }, data: createDefaultNodeData(NodeType.END) },
+      { id: pdfId, type: NodeType.PDF_PARSE, position: { x: 250, y: 250 }, data: createDefaultNodeData(NodeType.PDF_PARSE) },
+      { id: geminiId, type: NodeType.GEMINI_EVAL, position: { x: 250, y: 350 }, data: createDefaultNodeData(NodeType.GEMINI_EVAL) },
+      { id: emailId, type: NodeType.EMAIL, position: { x: 250, y: 450 }, data: createDefaultNodeData(NodeType.EMAIL) },
+      { id: endId, type: NodeType.END, position: { x: 250, y: 550 }, data: createDefaultNodeData(NodeType.END) },
     ] as WorkflowNode[];
 
     const createEdge = (source: string, target: string): WorkflowEdge => ({
@@ -248,8 +246,7 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
 
     const tEdges: WorkflowEdge[] = [
       createEdge(startId, csvId),
-      createEdge(csvId, scrapeId),
-      createEdge(scrapeId, pdfId),
+      createEdge(csvId, pdfId),
       createEdge(pdfId, geminiId),
       createEdge(geminiId, emailId),
       createEdge(emailId, endId),

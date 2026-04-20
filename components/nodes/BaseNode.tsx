@@ -7,8 +7,10 @@ import { NodeType } from "@/lib/types";
 import { NODE_TYPE_CONFIGS } from "@/lib/constants";
 import { useWorkflowStore } from "@/hooks/useWorkflowStore";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { SharedNodeData } from "@/lib/types";
 
 interface BaseNodeProps {
   id: string;
@@ -30,7 +32,8 @@ export function BaseNode({
   const config = NODE_TYPE_CONFIGS[type];
   const deleteNode = useWorkflowStore((s) => s.deleteNode);
   const setSelectedNode = useWorkflowStore((s) => s.setSelectedNode);
-  const { getNode } = useReactFlow();
+  const nodeData = useWorkflowStore((s) => s.nodes.find((n) => n.id === id)?.data) as SharedNodeData | undefined;
+  const executionStatus = nodeData?.executionStatus;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -70,6 +73,34 @@ export function BaseNode({
         </Button>
       </div>
 
+      {/* Execution Status — border glow + top badge */}
+      {executionStatus && (
+        <>
+          {/* Colored ring on the whole node */}
+          <div className={cn(
+            "absolute inset-0 rounded-lg pointer-events-none transition-all duration-300",
+            executionStatus === "running" && "ring-2 ring-blue-400/70 shadow-[0_0_12px_2px_rgba(96,165,250,0.35)]",
+            executionStatus === "success" && "ring-2 ring-green-400/70 shadow-[0_0_12px_2px_rgba(74,222,128,0.35)]",
+            executionStatus === "failed"  && "ring-2 ring-red-500/70 shadow-[0_0_12px_2px_rgba(239,68,68,0.4)]",
+            executionStatus === "skipped" && "ring-1 ring-muted-foreground/30",
+          )} />
+
+          {/* Status pill at top-right */}
+          <div className={cn(
+            "absolute -top-3 right-3 z-20 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm border border-background/80",
+            executionStatus === "running" && "bg-blue-500 text-white",
+            executionStatus === "success" && "bg-green-500 text-white",
+            executionStatus === "failed"  && "bg-red-500 text-white",
+            executionStatus === "skipped" && "bg-muted-foreground/60 text-white",
+          )}>
+            {executionStatus === "running" && <><Spinner className="size-2.5 text-white" /> Running</>}
+            {executionStatus === "success" && <><HugeiconsIcon icon={Tick02Icon} strokeWidth={3} className="size-2.5" /> Success</>}
+            {executionStatus === "failed"  && <><HugeiconsIcon icon={Cancel01Icon} strokeWidth={3} className="size-2.5" /> Failed</>}
+            {executionStatus === "skipped" && <>— Skipped</>}
+          </div>
+        </>
+      )}
+
       {/* Node content */}
       <div className="py-2.5 pl-4 pr-3">{children}</div>
 
@@ -78,14 +109,14 @@ export function BaseNode({
         <Handle
           type="target"
           position={Position.Top}
-          className="!w-2.5 !h-2.5 !rounded-full !border-2 !border-card !-top-1.5 !bg-muted-foreground/40 hover:!bg-foreground/60"
+          className="w-2.5! h-2.5! rounded-full! border-2! border-card! -top-1.5! bg-muted-foreground/40! hover:bg-foreground/60!"
         />
       )}
       {showSourceHandle && (
         <Handle
           type="source"
           position={Position.Bottom}
-          className="!w-2.5 !h-2.5 !rounded-full !border-2 !border-card !-bottom-1.5 !bg-muted-foreground/40 hover:!bg-foreground/60"
+          className="w-2.5! h-2.5! rounded-full! border-2! border-card! -bottom-1.5! bg-muted-foreground/40! hover:bg-foreground/60!"
         />
       )}
     </div>
