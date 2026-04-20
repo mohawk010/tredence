@@ -36,8 +36,8 @@ export async function PUT(
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
-        ...(nodes && { nodes: nodes as unknown }),
-        ...(edges && { edges: edges as unknown }),
+        ...(nodes && { nodes: nodes as any }),
+        ...(edges && { edges: edges as any }),
       },
     });
 

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { Prisma } from "@prisma/client";
 
 export async function GET() {
   try {
@@ -27,8 +26,8 @@ export async function POST(request: Request) {
       data: {
         name,
         description: description || null,
-        nodes: nodes as Prisma.InputJsonValue,
-        edges: edges as Prisma.InputJsonValue,
+        nodes: nodes as any,
+        edges: edges as any,
       },
     });
 
