@@ -1,0 +1,137 @@
+Build Prototype: HR Workflow Designer Module (React + React Flow) 
+Objective 
+Design and implement a mini–HR Workflow Designer module where an HR admin can visually 
+create and test internal workflows such as onboarding, leave approval, or document verification. 
+You will build a functional prototype that demonstrates: 
+ Deep knowledge of React and React Flow 
+ Ability to architect modular, scalable front-end systems 
+ Ability to integrate mock APIs 
+ Ability to build configurable nodes with custom edit forms 
+ Ability to simulate/test designed workflows in a small sandbox 
+This exercise is time-boxed to 4–6 hours. Focus on architectural clarity and working 
+functionality, not pixel-perfect UI. 
+ 
+Deliverables 
+A GitHub repository (or zipped project) that includes: 
+1. React application (Vite or Next.js preferred) 
+2. React Flow canvas with multiple custom nodes 
+3. Node configuration/editing forms for each node type 
+4. Mock API integration 
+5. Workflow Test/Sandbox panel 
+6. README explaining architecture, design choices, and assumptions 
+No authentication or backend persistence is required. 
+ 
+Functional Requirements 
+1. Workflow Canvas (React Flow) 
+Implement a drag-and-drop workflow canvas with: 
+Node Types 
+ Start Node – workflow entry point 
+ Task Node – human task (e.g., collect documents) 
+ Approval Node – manager or HR approval step 
+Tredence Analytics 
+ Automated Step Node – system-triggered actions (e.g., send email, generate PDF) 
+ End Node – workflow completion 
+Supported Canvas Actions 
+ Drag nodes from a sidebar onto the canvas 
+ Connect nodes with edges 
+ Select a node to edit it 
+ Delete nodes/edges 
+ Auto-validate basic constraints (e.g., Start Node must be first) 
+ 
+2. Node Editing / Configuration Forms (Key Requirement) 
+Each node type must have an editable “Node Form Panel” that appears when the node is 
+selected. 
+Minimum Required Fields 
+Start Node 
+ Start title 
+ Optional metadata key-value pairs 
+Task Node 
+ Title (required) 
+ Description 
+ Assignee (string input) 
+ Due date (text input or simple date field) 
+ Optional custom fields (key-value) 
+Approval Node 
+ Title 
+ Approver role (e.g., “Manager”, “HRBP”, “Director”) 
+ Auto-approve threshold (number) 
+Automated Step Node 
+ Title 
+ Choose an action from a mock API list 
+ Action parameters (dynamic based on mock action definition) 
+End Node 
+ End message 
+Tredence Analytics 
+ Summary flag (boolean toggle) 
+Evaluation: dynamic forms, controlled components, clean state handling, type safety, modularity. 
+ 
+3. Mock API Layer 
+Create a lightweight API layer using JSON server, MSW, or local mocks. 
+Must support: 
+ GET /automations 
+Returns mock automated actions such as: 
+ [ 
+   { "id": "send_email", "label": "Send Email", "params": ["to", "subject"] }, 
+   { "id": "generate_doc", "label": "Generate Document", "params": ["template", "recipient"] 
+} 
+ ] 
+ POST /simulate 
+Accepts workflow JSON and returns a mock step-by-step execution result. 
+ 
+4. Workflow Testing / Sandbox Panel 
+A small panel or modal that: 
+ Serializes the entire workflow graph 
+ Sends it to the mock /simulate API 
+ Displays a step-by-step execution log (basic text or timeline UI) 
+ Validates structure (e.g., missing connections, cycles) 
+This tests the candidate’s reasoning around state, graph structures, and API workflows. 
+ 
+5. Architecture Expectations 
+We will evaluate: 
+ A clean folder structure 
+ Separation of canvas logic, node logic, and API logic 
+ Reusable custom hooks 
+ Ability to design abstractions that scale 
+ Thoughtful component decomposition 
+ Form structure that can be extended to new node types 
+Tredence Analytics 
+ Clarity of interfaces/types for workflow nodes 
+ 
+Optional (Bonus, Not Required) 
+If time permits: 
+ Export/Import workflow as JSON 
+ Node templates 
+ Undo/Redo 
+ Mini-map or zoom controls 
+ Workflow validation errors visually shown on nodes 
+ Auto-layout 
+ Node version history 
+ 
+Assessment Criteria 
+Area What We Look For 
+React Flow proficiency Custom nodes, positioning, edge management 
+React architecture Hooks, context, components, folder structure 
+Complex form handling Node forms, dynamic fields, validation 
+Mock API interaction Data layer, async patterns, abstraction 
+Scalability Is the solution extensible? 
+Communication README, assumptions, design notes 
+Delivery speed Can a senior engineer ship value fast? 
+ 
+What the Candidate Submits 
+ GitHub repo or zipped project 
+ README explaining: 
+o Architecture 
+o How to run 
+o Design decisions 
+o What they completed vs. what they would add with more time 
+Tredence Analytics 
+ 
+UI Reference : reference-image1.png and reference-image2.png
+ 
+Reference 1 
+ Use this as a broad reference for the UI, Theme and the Canvas. This is not the 
+design spec 
+ Your solution need not implement all the Specs implemented in this UI and this is only to 
+be used as design reference.  
+ Improvements and innovations on this design reference is encouraged and incentivized  
+ 

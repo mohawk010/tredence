@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Workflow {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  nodes       Json     @default("[]")
+  edges       Json     @default("[]")
+  version     String   @default("1.0.0")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model JobRole {
+  id          String      @id @default(uuid())
+  rippleId    String      @unique // ID from RippleHire
+  title       String
+  location    String?
+  description String?     @db.Text
+  url         String      @unique
+  createdAt   DateTime    @default(now())
+  candidates  Candidate[]
+}
+
+model Candidate {
+  id              String   @id @default(uuid())
+  name            String
+  email           String
+  dob             String?
+  city            String?
+  resumeLink      String
+  roleId          String
+  role            JobRole  @relation(fields: [roleId], references: [id])
+  aiScore         Int?     @default(0) // 0-100 fit score
+  aiEvaluation    Json?    // Detailed Gemini review
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  workflowRunId   String?  // Reference if processed by a specific run
+  createdAt       DateTime @default(now())
+}
